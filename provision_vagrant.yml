@@ -1,0 +1,44 @@
+- hosts: web
+  sudo: true
+  tasks:
+    - name: install libselinux-python
+      yum: name=libselinux-python state=latest
+    - name: install git
+      yum: name=git state=latest
+    - name: install apache
+      yum: name=httpd state=latest
+    - name: start apache and enaled
+      service: name=httpd state=started enabled=yes
+    - name: change owner
+      file: dest=/var/www/html owner=vagrant recurse=yes
+    - name: install php packages
+      yum: name={{item}} state=latest
+      with_items:
+        - php
+        - php-devel
+        - php-mbstring
+        - php-mysql
+      notify:
+        - restart apache
+    - name: install mysql
+      yum: name={{item}} state=latest
+      with_items:
+        - mysql-server
+        - MySQL-python
+    - name: start mysql and enabled
+      service: name=mysqld state=started enabled=yes
+    - name: create a database
+      mysql_db: name=badstore2015 state=present
+    - name: clone badstore2015
+      git: repo=https://github.com/otms61/badstore2015 dest=/var/www/badstore2015
+    - name: import sql
+      mysql_db: name=badstore2015 state=import target=/var/www/badstore2015/sql/badstore2015.sql
+    - name: change DocumentRoot 
+      shell: sed -i 's#DocumentRoot "/var/www/html"#DocumentRoot "/var/www/badstore2015/www"#' /etc/httpd/conf/httpd.conf
+      notify:
+        - restart apache
+  handlers:
+    - name: restart apache
+      service: name=httpd state=restarted
+
+
