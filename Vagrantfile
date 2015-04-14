@@ -7,4 +7,5 @@ Vagrant.configure(2) do |config|
     ansible.inventory_path = "hosts"
     ansible.limit = "all"
   end
+  print "http://192.168.40.10 \n"
 end
